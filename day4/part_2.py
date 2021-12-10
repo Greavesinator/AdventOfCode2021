@@ -27,6 +27,7 @@ class BingoCard:
         for item in self.numbers:
             if item.number == num:
                 item.marked = True
+                break
 
     def checkBingo(self):
         # Check rows
@@ -74,16 +75,13 @@ for line in input_data.readlines():
         for num in line.split():
             all_cards[-1].addNumber(int(num))
 
-card_matched = False
 for call_num in bingo_call_list:
-    if card_matched:
-        break
-
-    for card in all_cards:
+    for i, card in list(enumerate(all_cards)):
         card.checkNumber(call_num)
+
         if card.checkBingo():
-            print("Match!")
-            card.display()
-            print(card.getScore())
-            card_matched = True
-            break
+            if len(all_cards) == 1:
+                print("Match!")
+                card.display()
+                print(card.getScore())
+            all_cards.remove(card)
