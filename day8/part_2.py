@@ -26,28 +26,30 @@ for line in input_data.readlines():
     len_5_list = []
     len_6_list = []
     # Build our dict of simple digits.
-    for digit in line.split(' | ')[0].split():
-        digit = "".join(sorted(digit))
-        if len(digit) == 2:
-            number_dict[digit] = '1'
-            one = digit
-        elif len(digit) == 4:
-            number_dict[digit] = '4'
-            four = digit
-        elif len(digit) == 3:
-            number_dict[digit] = '7'
-            seven = digit
-        elif len(digit) == 7:
-            number_dict[digit] = '8'
-            eight = digit
-        elif len(digit) == 5:
+    for code in line.split(' | ')[0].split():
+        code = "".join(sorted(code))
+        if len(code) == 2:
+            number_dict[code] = '1'
+            one = code
+        elif len(code) == 4:
+            number_dict[code] = '4'
+            four = code
+        elif len(code) == 3:
+            number_dict[code] = '7'
+            seven = code
+        elif len(code) == 7:
+            number_dict[code] = '8'
+            eight = code
+        elif len(code) == 5:
             # Decide if its 2,3 or 5
-            len_5_list.append(digit)
-        elif len(digit) == 6:
+            len_5_list.append(code)
+        elif len(code) == 6:
             # Decide if its 0,6,9
-            len_6_list.append(digit)
+            len_6_list.append(code)
 
-        # Deduce awkward chars.
+    # Deduce awkward chars.
+    # Essentially difference with found characters can be unique in cases.
+    # Use this to identify the remaining character codes.
     for code in len_6_list:
         code = "".join(sorted(code))
         if len(''.join(set(code).intersection(one))) == 1:
