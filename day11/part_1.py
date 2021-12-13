@@ -1,39 +1,46 @@
 
+from os import X_OK
 import time
 from typing import NamedTuple
 
 input_data = open("day11/input_data.txt", 'r')
 
+class Point:
+    def __init__(self,x,y) -> None:
+        self.x = x
+        self.y = y
 
-def get_diagonals(x, y, list_2d):
+def get_diagonals(p, list_2d):
     diag_elems = []
+    x = p.x
+    y = p.y
     # Assess points around this.
     if y != 0:
-        point_n = list_2d[y - 1][x]
+        point_n = Point(x, y-1)
         diag_elems.append(point_n)
         if x != 0:
-            point_nw = list_2d[y - 1][x - 1]
+            point_nw = Point(x-1, y-1)
             diag_elems.append(point_nw)
 
     if x != (len(list_2d[y]) - 1):
-        point_e = list_2d[y][x + 1]
+        point_e = Point(x+1,y)
         diag_elems.append(point_e)
         if y != 0:
-            point_ne = list_2d[y - 1][x + 1]
+            point_ne = Point(x+1, y-1)
             diag_elems.append(point_ne)
         if y != (len(list_2d) - 1):
-            point_se = list_2d[y + 1][x + 1]
+            point_se = Point(x+1, y+1)
             diag_elems.append(point_se)
 
     if y != (len(list_2d) - 1):
-        point_s = list_2d[y + 1][x]
+        point_s = Point(x, y+1)
         diag_elems.append(point_s)
         if x != 0:
-            point_sw = list_2d[y + 1][x - 1]
+            point_sw = Point(x-1, y+1)
             diag_elems.append(point_sw)
 
     if x != 0:
-        point_w = list_2d[y][x - 1]
+        point_w = Point(x-1, y)
         diag_elems.append(point_w)
 
     return diag_elems
@@ -69,15 +76,28 @@ class OctoSwarm:
                 if c != '\n':
                     self.swarm[i].append(Octopus(int(c)))
 
+    def updateDiags(self, p):
+        diag_points = get_diagonals(p, self.swarm)
+        for p in diag_points:
+            # Already going to flash, no need to continue this chain.
+            # Flash will have already been handled.
+            if self.swarm[p.y][p.x].willFlash():
+                continue
+            self.swarm[p.y][p.x].updateStep()
+            if self.swarm[p.y][p.x].willFlash():
+                self.updateDiags(p)
+
     def step(self):
-        for x, row in enumerate(self.swarm):
-            for y, octo in enumerate(row):
+        for y, row in enumerate(self.swarm):
+            for x, octo in enumerate(row):
+                # Already going to flash, no need to continue this chain.
+                # Flash will have already been handled.
+                if octo.willFlash():
+                    continue
                 octo.updateStep()
 
                 if octo.willFlash():
-                    diag_octos = get_diagonals(x, y, self.swarm)
-                    for o in diag_octos:
-                        o.updateStep()
+                    self.updateDiags(Point(x,y))
 
         for row in self.swarm:
             for octo in row:
@@ -96,13 +116,8 @@ start = time.perf_counter()
 
 s = OctoSwarm(input_data.readlines())
 
-print("Initial;")
-s.display()
-
-for i in range(10):
+for i in range(100):
     s.step()
-    print("Step ", i+1, ";")
-    s.display()
 
 end = time.perf_counter()
 
