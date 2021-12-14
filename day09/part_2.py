@@ -109,7 +109,7 @@ class Map:
 
 input_data = open("day9/input_data.txt", 'r')
 
-start = time.perf_counter()
+start = time.perf_counter_ns()
 
 m = Map(input_data.readlines())
 
@@ -120,8 +120,8 @@ product = 1
 for i in range(0, 3):
     product *= basins[i]
 
-end = time.perf_counter()
+end = time.perf_counter_ns()
 print(basins)
 print(product)
 
-print("Time elapsed: ", (end - start)*1000.0, "us")
+print("Time elapsed: ", (end - start)/1000000.0, "ms")

@@ -4,7 +4,7 @@ from typing import NamedTuple
 
 input_data = open("day10/input_data.txt", 'r')
 
-start = time.perf_counter()
+start = time.perf_counter_ns()
 
 chunk_openers = ['{', '[', '<', '(']
 chunk_closers = ['}', ']', '>', ')']
@@ -40,10 +40,10 @@ for line in input_data.readlines():
         score_list.append(score)
 
 score_list.sort()
-end = time.perf_counter()
+end = time.perf_counter_ns()
 
 print(error_list)
 print(score_list)
 print(score_list[int(len(score_list)/2)])
 
-print("Time elapsed: ", (end - start)*1000.0, "us")
+print("Time elapsed: ", (end - start)/1000000.0, "ms")

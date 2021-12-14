@@ -60,7 +60,7 @@ class Map:
 
 input_data = open("day9/input_data.txt", 'r')
 
-start = time.perf_counter()
+start = time.perf_counter_ns()
 
 m = Map(input_data.readlines())
 
@@ -70,9 +70,9 @@ sum = 0
 for p in lp:
     sum += p+1
 
-end = time.perf_counter()
+end = time.perf_counter_ns()
 
 print(lp)
 print(sum)
 
-print("Time elapsed: ", (end - start)*1000.0, "us")
+print("Time elapsed: ", (end - start)/1000000.0, "ms")

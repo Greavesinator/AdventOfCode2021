@@ -5,10 +5,12 @@ from typing import NamedTuple
 
 input_data = open("day11/input_data.txt", 'r')
 
+
 class Point:
-    def __init__(self,x,y) -> None:
+    def __init__(self, x, y) -> None:
         self.x = x
         self.y = y
+
 
 def get_diagonals(p, list_2d):
     diag_elems = []
@@ -23,7 +25,7 @@ def get_diagonals(p, list_2d):
             diag_elems.append(point_nw)
 
     if x != (len(list_2d[y]) - 1):
-        point_e = Point(x+1,y)
+        point_e = Point(x+1, y)
         diag_elems.append(point_e)
         if y != 0:
             point_ne = Point(x+1, y-1)
@@ -97,7 +99,7 @@ class OctoSwarm:
                 octo.updateStep()
 
                 if octo.willFlash():
-                    self.updateDiags(Point(x,y))
+                    self.updateDiags(Point(x, y))
 
         all_flashing = True
         for row in self.swarm:
@@ -116,7 +118,7 @@ class OctoSwarm:
         print()
 
 
-start = time.perf_counter()
+start = time.perf_counter_ns()
 
 s = OctoSwarm(input_data.readlines())
 
@@ -126,10 +128,10 @@ while True:
     if s.step():
         break
 
-end = time.perf_counter()
+end = time.perf_counter_ns()
 
 print(s.flash_count)
 s.display()
 print(count)
 
-print("Time elapsed: ", (end - start)*1000.0, "us")
+print("Time elapsed: ", (end - start)/1000000.0, "ms")

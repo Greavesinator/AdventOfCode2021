@@ -17,7 +17,7 @@ nine = ''
 
 hit_count = 0
 
-start = time.perf_counter()
+start = time.perf_counter_ns()
 
 sum = 0
 
@@ -84,7 +84,7 @@ for line in input_data.readlines():
     print(curr_result)
     sum += int(curr_result)
 
-end = time.perf_counter()
+end = time.perf_counter_ns()
 
 print(sum)
-print("Time elapsed: ", (end - start)*1000.0, "us")
+print("Time elapsed: ", (end - start)/1000000.0, "ms")

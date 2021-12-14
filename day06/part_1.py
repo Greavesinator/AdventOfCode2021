@@ -4,6 +4,7 @@ import time
 
 input_data = open("day6/input_data.txt", 'r')
 
+
 class FishSchool:
     def __init__(self, fish) -> None:
         # Index is days. Value is members
@@ -52,10 +53,10 @@ s = FishSchool(initial_fish)
 
 print("Initial fish: ", s.fish_school)
 
-start = time.perf_counter()
+start = time.perf_counter_ns()
 for i in range(80):
     s.passDay()
-end = time.perf_counter()
+end = time.perf_counter_ns()
 
 print(s.total())
-print("Time elapsed: ", (end - start)*1000.0, "us")
+print("Time elapsed: ", (end - start)/1000000.0, "ms")
