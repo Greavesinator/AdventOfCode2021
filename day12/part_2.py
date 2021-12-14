@@ -1,135 +1,95 @@
 
-from os import X_OK
 import time
 from typing import NamedTuple
 
-input_data = open("day11/input_data.txt", 'r')
-
-class Point:
-    def __init__(self,x,y) -> None:
-        self.x = x
-        self.y = y
-
-def get_diagonals(p, list_2d):
-    diag_elems = []
-    x = p.x
-    y = p.y
-    # Assess points around this.
-    if y != 0:
-        point_n = Point(x, y-1)
-        diag_elems.append(point_n)
-        if x != 0:
-            point_nw = Point(x-1, y-1)
-            diag_elems.append(point_nw)
-
-    if x != (len(list_2d[y]) - 1):
-        point_e = Point(x+1,y)
-        diag_elems.append(point_e)
-        if y != 0:
-            point_ne = Point(x+1, y-1)
-            diag_elems.append(point_ne)
-        if y != (len(list_2d) - 1):
-            point_se = Point(x+1, y+1)
-            diag_elems.append(point_se)
-
-    if y != (len(list_2d) - 1):
-        point_s = Point(x, y+1)
-        diag_elems.append(point_s)
-        if x != 0:
-            point_sw = Point(x-1, y+1)
-            diag_elems.append(point_sw)
-
-    if x != 0:
-        point_w = Point(x-1, y)
-        diag_elems.append(point_w)
-
-    return diag_elems
+input_data = open("day12/input_data.txt", 'r')
 
 
-class Octopus:
-    def __init__(self, val) -> None:
-        self.value = val
+class Cave:
+    def __init__(self, isLarge, id) -> None:
+        self.id = id
+        self.large = isLarge
+        self.connections = []
 
-    def updateStep(self):
-        if self.value < 10:
-            self.value += 1
-
-    def willFlash(self):
-        if self.value >= 10:
-            return True
-        return False
-
-    def checkFlash(self):
-        if self.value >= 10:
-            self.value = 0
-            return True
-        return False
+    def addConnection(self, cave):
+        self.connections.append(cave)
 
 
-class OctoSwarm:
-    def __init__(self, swarm_str) -> None:
-        self.swarm = []
-        self.flash_count = 0
-        for i, line in enumerate(swarm_str):
-            self.swarm.append([])
-            for c in line:
-                if c != '\n':
-                    self.swarm[i].append(Octopus(int(c)))
+class CaveSystem:
+    def __init__(self, input) -> None:
+        self.caves = {}
 
-    def updateDiags(self, p):
-        diag_points = get_diagonals(p, self.swarm)
-        for p in diag_points:
-            # Already going to flash, no need to continue this chain.
-            # Flash will have already been handled.
-            if self.swarm[p.y][p.x].willFlash():
+        for line in input:
+            line = line.strip()
+            entry, exit = line.split("-")
+
+            if not entry in self.caves:
+                self.caves[entry] = Cave(not any(c.islower()
+                                         for c in entry), entry)
+            if not exit in self.caves:
+                self.caves[exit] = Cave(not any(c.islower()
+                                        for c in exit), exit)
+
+            self.caves[entry].addConnection(self.caves[exit])
+            self.caves[exit].addConnection(self.caves[entry])
+
+    def findAllPaths(self):
+        start = self.caves['start']
+        end = self.caves['end']
+        found_paths = []
+
+        curr_path = []
+        # Recursively find all paths and set found_paths
+        self.nextRoute(start, end, start, curr_path, found_paths, True)
+        return found_paths
+
+    def smallCaveDuplicatesAllowed(self, list):
+        small_caves = [i for i in list if all(c.islower() for c in i)]
+
+        for i in set(small_caves):
+            if list.count(i) >= 2:
+                return False
+
+        return True
+
+    def nextRoute(self, start, end, cave, curr_path, found_paths, dups):
+        curr_path.append(cave.id)
+
+        dups_allowed = dups
+        if dups_allowed:
+            dups_allowed = self.smallCaveDuplicatesAllowed(curr_path)
+
+        for c in cave.connections:
+            if (not c.large and c.id in curr_path and not dups_allowed) or c is start:
                 continue
-            self.swarm[p.y][p.x].updateStep()
-            if self.swarm[p.y][p.x].willFlash():
-                self.updateDiags(p)
-
-    def step(self):
-        for y, row in enumerate(self.swarm):
-            for x, octo in enumerate(row):
-                # Already going to flash, no need to continue this chain.
-                # Flash will have already been handled.
-                if octo.willFlash():
-                    continue
-                octo.updateStep()
-
-                if octo.willFlash():
-                    self.updateDiags(Point(x,y))
-
-        all_flashing = True
-        for row in self.swarm:
-            for octo in row:
-                if octo.checkFlash():
-                    self.flash_count += 1
-                else:
-                    all_flashing = False
-        return all_flashing
-
-    def display(self):
-        for row in self.swarm:
-            print()
-            for octo in row:
-                print(octo.value, ", ", end="")
-        print()
+            if c == end:
+                curr_path.append(c.id)
+                if curr_path not in found_paths:
+                    found_paths.append(list(curr_path))
+                curr_path.pop()
+                continue
+            end_found = self.nextRoute(
+                start, end, c, curr_path, found_paths, dups_allowed)
+            if end_found:
+                return True
+        curr_path.pop()
+        return False
 
 
-start = time.perf_counter()
+start = time.perf_counter_ns()
 
-s = OctoSwarm(input_data.readlines())
+c = CaveSystem(input_data.readlines())
 
-count = 0
-while True:
-    count += 1
-    if s.step():
-        break
+paths = c.findAllPaths()
 
-end = time.perf_counter()
+end = time.perf_counter_ns()
 
-print(s.flash_count)
-s.display()
-print(count)
+# for p in c.findAllPaths():
+#     print()
+#     for cave in p:
+#         print(str(cave) + ",", end="")
 
-print("Time elapsed: ", (end - start)*1000.0, "us")
+# print()
+print(len(paths))
+
+print("Time elapsed: ", (end - start)/1000000.0, "ms")

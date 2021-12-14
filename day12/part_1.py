@@ -1,17 +1,19 @@
 
-from os import X_OK
 import time
 from typing import NamedTuple
 
 input_data = open("day12/input_data.txt", 'r')
 
+
 class Cave:
-    def __init__(self, isLarge) -> None:
+    def __init__(self, isLarge, id) -> None:
+        self.id = id
         self.large = isLarge
         self.connections = []
 
     def addConnection(self, cave):
         self.connections.append(cave)
+
 
 class CaveSystem:
     def __init__(self, input) -> None:
@@ -22,9 +24,11 @@ class CaveSystem:
             entry, exit = line.split("-")
 
             if not entry in self.caves:
-                self.caves[entry] = Cave(not any(c.islower() for c in entry))
+                self.caves[entry] = Cave(not any(c.islower()
+                                         for c in entry), entry)
             if not exit in self.caves:
-                self.caves[exit] = Cave(not any(c.islower() for c in exit))
+                self.caves[exit] = Cave(not any(c.islower()
+                                        for c in exit), exit)
 
             self.caves[entry].addConnection(self.caves[exit])
             self.caves[exit].addConnection(self.caves[entry])
@@ -32,42 +36,41 @@ class CaveSystem:
     def findAllPaths(self):
         start = self.caves['start']
         end = self.caves['end']
-        forbidden = []
+        found_paths = []
 
-        path_found = True
-        while path_found:
-            path_found, new_path = self.findPath(start, end, forbidden)
+        curr_path = []
+        # Recursively find all paths and set found_paths
+        self.nextRoute(end, start, curr_path, found_paths)
+        return found_paths
 
-    def findPath(self, start, end, forbidden):
-        new_path = []
-        visited = []
-
-        pos = start
-        while pos != end:
-            new_path.append(list(self.caves.keys())[list(self.caves.values()).index(pos)])
-            if not pos.large:
-                visited.append(pos)
-
-            found_new_option = False
-            for p in pos.connections:
-                if p not in forbidden and p not in visited:
-                    pos = p
-                    found_new_option = True
-                    break
-
-            if not found_new_option:
-                return False
-
-        return True, new_path
+    def nextRoute(self, end, cave, curr_path, found_paths):
+        curr_path.append(cave.id)
+        for c in cave.connections:
+            if not c.large and c.id in curr_path:
+                continue
+            if c == end:
+                curr_path.append(c.id)
+                if curr_path not in found_paths:
+                    found_paths.append(list(curr_path))
+                curr_path.pop()
+                continue
+            end_found = self.nextRoute(end, c, curr_path, found_paths)
+            if end_found:
+                return True
+        curr_path.pop()
+        return False
 
 
-
-start = time.perf_counter()
+start = time.perf_counter_ns()
 
 c = CaveSystem(input_data.readlines())
 
-c.findAllPaths()
+paths = c.findAllPaths()
 
-end = time.perf_counter()
+end = time.perf_counter_ns()
 
-print("Time elapsed: ", (end - start)*1000.0, "us")
+for p in c.findAllPaths():
+    print(p)
+print(len(paths))
+
+print("Time elapsed: ", (end - start)/1000000.0, "ms")
