@@ -1,82 +1,78 @@
 
 import time
-import re
-from collections import Counter
+from queue import PriorityQueue
 
-input_data = open("day14/input_data.txt", 'r')
-
-
-class Rule:
-    def __init__(self, pair, middle) -> None:
-        self.pair = pair
-        self.middle = middle
+input_data = open("day15/input_data.txt", 'r')
 
 
-def apply_rules(polymer, rules, loops):
-    pair_dict = Counter()
-    char_count = Counter()
-    poly_list = []
-    poly_list[:0] = polymer
+class Graph:
+    def __init__(self, num):
+        self.v = num
+        self.visited = []
+        self.edges = [[-1 for i in range(num)]
+                      for j in range(num)]
 
-    # Init pair counter
-    for i in range(len(polymer)-1):
-        pair = polymer[i] + polymer[i+1]
-        if pair in rules:
-            pair_dict[pair] += 1
-        char_count[polymer[i]] += 1
-
-    char_count[polymer[-1]] += 1
-
-    for _ in range(loops):
-        for (i, j), v in pair_dict.copy().items():
-            pair_dict[i+j] -= 1*v
-            pair_dict[i+rules[i+j]] += 1*v
-            pair_dict[rules[i+j]+j] += 1*v
-            char_count[rules[i+j]] += 1*v
-
-    return char_count
-
-    # new_polymer = ""
-    # for i in range(len(polymer)-1):
-    #     new_polymer += polymer[i]
-    #     pair = polymer[i] + polymer[i+1]
-    #     if pair in rules:
-    #         new_polymer += rules[pair]
-    # new_polymer += polymer[-1]
-    # return new_polymer
+    def add_edge(self, u, v, weight):
+        self.edges[u][v] = weight
 
 
-def maxMin(char_count):
-    common = char_count.most_common()
+def dijkstra(graph, start_v):
+    D = {v: float('inf') for v in range(graph.v)}
+    D[start_v] = 0
 
-    max = common[0][1]
-    min = common[-1][1]
+    pq = PriorityQueue()
+    pq.put((0, start_v))
 
-    return max, min
+    while not pq.empty():
+        (_, current_vertex) = pq.get()
+        graph.visited.append(current_vertex)
+
+        for neighbor in range(graph.v):
+            if graph.edges[current_vertex][neighbor] != -1:
+                distance = graph.edges[current_vertex][neighbor]
+                if neighbor not in graph.visited:
+                    old_cost = D[neighbor]
+                    new_cost = D[current_vertex] + distance
+                    if new_cost < old_cost:
+                        pq.put((new_cost, neighbor))
+                        D[neighbor] = new_cost
+    return D
 
 
 start = time.perf_counter_ns()
 
-polymer = ''
-rules = {}
+data = []
 
-for line in input_data:
+for i, line in enumerate(input_data):
     line = line.strip()
-    if ' -> ' in line:
-        r = line.split(' -> ')
-        rules[r[0]] = r[1]
-    elif line != '':
-        polymer = line
+    data.append(list(map(int, line)))
 
-char_count = apply_rules(polymer, rules, 40)
-max, min = maxMin(char_count)
+g = Graph(len(data)*5*len(data[0])*5)
+
+# for x in range(5):
+for i, row in enumerate(data):
+    for j, cost in enumerate(row):
+        # From 0 -> 1 costs 4
+        id = i*len(data) + j
+        if j != (len(row) - 1):
+            id_e = id + 1
+            g.add_edge(id, id_e, row[j+1])
+        if j != 0:
+            id_w = id - 1
+            g.add_edge(id, id_w, row[j-1])
+        if i != (len(data) - 1):
+            id_s = id + len(data)
+            g.add_edge(id, id_s, data[i+1][j])
+        if i != 0:
+            id_n = id - len(data)
+            g.add_edge(id, id_n, data[i-1][j])
+
+
+D = dijkstra(g, 0)
 
 end = time.perf_counter_ns()
 
-print(char_count)
-print(max)
-print(min)
-
-print(max - min)
+for vertex in range(len(D)):
+    print("0 -> ", vertex, "is", D[vertex])
 
 print("Time elapsed: ", (end - start)/1000000.0, "ms")

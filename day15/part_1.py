@@ -45,9 +45,7 @@ data = []
 
 for i, line in enumerate(input_data):
     line = line.strip()
-    data.append([])
-    for j, cost in enumerate(line):
-        data[i].append(int(cost))
+    data.append(list(map(int, line)))
 
 g = Graph(len(data)*len(data[0]))
 
@@ -69,7 +67,6 @@ for i, row in enumerate(data):
             g.add_edge(id, id_n, data[i-1][j])
 
 
-g.add_edge(0, 0, 0)
 D = dijkstra(g, 0)
 
 end = time.perf_counter_ns()
