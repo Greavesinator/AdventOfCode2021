@@ -1,6 +1,7 @@
 
 import time
 import re
+from collections import Counter
 
 input_data = open("day14/input_data.txt", 'r')
 
@@ -11,25 +12,29 @@ class Rule:
         self.middle = middle
 
 
-def apply_rules(polymer, rules):
-    poly_dict = {}
+def apply_rules(polymer, rules, loops):
+    pair_dict = Counter()
+    char_count = Counter()
     poly_list = []
     poly_list[:0] = polymer
 
+    # Init pair counter
     for i in range(len(polymer)-1):
         pair = polymer[i] + polymer[i+1]
-        if pair not in poly_dict:
-            poly_dict[pair] = []
-        poly_dict[pair] += [i+1]
+        if pair in rules:
+            pair_dict[pair] += 1
+        char_count[polymer[i]] += 1
 
-    added_chars = 0
-    for k, v in poly_dict.items():
-        if k in rules:
-            for i in v:
-                poly_list.insert(i+added_chars, rules[k])
-                added_chars += 1
+    char_count[polymer[-1]] += 1
 
-    return "".join(poly_list)
+    for _ in range(loops):
+        for (i, j), v in pair_dict.copy().items():
+            pair_dict[i+j] -= 1*v
+            pair_dict[i+rules[i+j]] += 1*v
+            pair_dict[rules[i+j]+j] += 1*v
+            char_count[rules[i+j]] += 1*v
+
+    return char_count
 
     # new_polymer = ""
     # for i in range(len(polymer)-1):
@@ -41,15 +46,11 @@ def apply_rules(polymer, rules):
     # return new_polymer
 
 
-def maxMin(polymer):
-    max = 0
-    min = 99999999999
-    for c in set(polymer):
-        count = polymer.count(c)
-        if count > max:
-            max = count
-        elif count < min:
-            min = count
+def maxMin(char_count):
+    common = char_count.most_common()
+
+    max = common[0][1]
+    min = common[-1][1]
 
     return max, min
 
@@ -67,14 +68,12 @@ for line in input_data:
     elif line != '':
         polymer = line
 
-for i in range(40):
-    print("Step: ", i)
-    polymer = apply_rules(polymer, rules)
-max, min = maxMin(polymer)
+char_count = apply_rules(polymer, rules, 40)
+max, min = maxMin(char_count)
 
 end = time.perf_counter_ns()
 
-print(polymer)
+print(char_count)
 print(max)
 print(min)
 
