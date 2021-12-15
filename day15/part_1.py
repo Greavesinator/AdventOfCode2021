@@ -14,7 +14,6 @@ class Graph:
 
     def add_edge(self, u, v, weight):
         self.edges[u][v] = weight
-        self.edges[v][u] = weight
 
 
 def dijkstra(graph, start_v):
@@ -59,9 +58,15 @@ for i, row in enumerate(data):
         if j != (len(row) - 1):
             id_e = id + 1
             g.add_edge(id, id_e, row[j+1])
+        if j != 0:
+            id_w = id - 1
+            g.add_edge(id, id_w, row[j-1])
         if i != (len(data) - 1):
             id_s = id + len(data)
             g.add_edge(id, id_s, data[i+1][j])
+        if i != 0:
+            id_n = id - len(data)
+            g.add_edge(id, id_n, data[i-1][j])
 
 
 g.add_edge(0, 0, 0)
@@ -70,6 +75,6 @@ D = dijkstra(g, 0)
 end = time.perf_counter_ns()
 
 for vertex in range(len(D)):
-    print("Distance from vertex 0 to vertex", vertex, "is", D[vertex])
+    print("0 -> ", vertex, "is", D[vertex])
 
 print("Time elapsed: ", (end - start)/1000000.0, "ms")
