@@ -81,22 +81,20 @@ start = time.perf_counter_ns()
 def split(x):
     index = 0
     action = False
-    while True:
-        r = re.search("[0-9][0-9]+", x[index:])
-        if r is not None:
-            action = True
-            start, end = r.span()
-            start += index
-            end += index
 
-            num = int(x[start:end])
-            lhs = int(num/2)
-            rhs = int((num+1)/2)
+    r = re.search("[0-9][0-9]+", x[index:])
+    if r is not None:
+        action = True
+        start, end = r.span()
+        start += index
+        end += index
 
-            x = x[:start] + '[' + str(lhs) + ',' + str(rhs) + ']' + x[end:]
-            index = end  # ??
-        else:
-            break
+        num = int(x[start:end])
+        lhs = int(num/2)
+        rhs = int((num+1)/2)
+
+        x = x[:start] + '[' + str(lhs) + ',' + str(rhs) + ']' + x[end:]
+        index = end+2  # ??
 
     return x, action
 
@@ -122,12 +120,15 @@ def explode(x):
                     end += i
                     lhs_num, rhs_num = [int(s)
                                         for s in x[start:end].split(',')]
-                    # FIX
-                    if lhs_index != 0:
-                        # Replace int with sum of it and lhs
-                        result = result[:lhs_index] + \
-                            str(int(result[lhs_index]) +
-                                lhs_num) + result[lhs_index + 1:]
+                    # FIX. Find last match of [0-9]+ in x[:start]
+                    match = None
+                    for match in re.finditer(r"[0-9]+", x[:start]):
+                        pass
+                    if match is not None:
+                        lhs_start, lhs_end = match.span()
+                        result = result[:lhs_start] + \
+                            str(lhs_num +
+                                int(result[lhs_start:lhs_end])) + result[lhs_end:]
 
                     # Get rhs and do same
                     r = re.search("[0-9]+", x[end:])
@@ -153,18 +154,32 @@ def explode(x):
 def add(x, y):
     result = '[' + x + ',' + y + ']'
     while True:
-        print(result)
         result, action = explode(result)
         if not action:
             result, action = split(result)
             if not action:
                 break
+    print(result)
     return result
 
 
-lines = [x.strip() for x in input_data.readlines()]
-print(reduce(add, lines))
+def magnitude(x):
+    while True:
+        r = re.search("[0-9]+,[0-9]+", x)
+        if r is not None:
+            start, end = r.span()
+            lhs_num, rhs_num = [int(s)
+                                for s in x[start:end].split(',')]
+            x = x[:start-1] + str(lhs_num*3+rhs_num*2) + x[end + 1:]
+        else:
+            break
+    return int(x)
 
-#print(add("[[[[4,3],4],4],[7,[[8,4],9]]]", "[1,1]"))
+
+lines = [x.strip() for x in input_data.readlines()]
+result = reduce(add, lines)
+
+print(magnitude(result))
+# print(add("[[[[4,3],4],4],[7,[[8,4],9]]]", "[1,1]"))
 end = time.perf_counter_ns()
 print("Time elapsed: ", (end - start)/1000000.0, "ms")
